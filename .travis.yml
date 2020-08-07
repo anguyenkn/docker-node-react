@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t anguyenkn/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true anguyenkn/react-test npm test
+
+after_success:
+  - docker build - anguyenkn/multi-client ./client
+  - docker build - anguyenkn/multi-nginx ./nginx
+  - docker build - anguyenkn/multi-server ./server
+  - docker build - anguyenkn/multi-worker ./worker
+  # log in to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login - u "$DOCKER_ID" --password-stdin
+  # Take the images and push to docker hub
+  - docker push anguyenkn/multi-client
+  - docker push anguyenkn/multi-nginx
+  - docker push anguyenkn/multi-server
+  - docker push anguyenkn/multi-worker
